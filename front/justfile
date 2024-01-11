@@ -1,0 +1,6 @@
+set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
+
+serve:
+	npx ng serve
+start: serve
+

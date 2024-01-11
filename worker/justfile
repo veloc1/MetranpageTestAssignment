@@ -1,0 +1,5 @@
+set dotenv-load
+
+start:
+  dotnet run
+

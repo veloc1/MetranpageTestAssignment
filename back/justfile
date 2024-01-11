@@ -1,0 +1,18 @@
+start:
+	PORT=4443 npx nest start --watch
+
+start-dev-services:
+	sudo podman-compose -f dev.docker-compose.yml up -d
+
+stop-dev-services:
+	sudo podman-compose -f dev.docker-compose.yml down
+
+migrate-db-dev:
+	npx prisma migrate dev --schema prisma/schema.prisma
+
+build:
+	buildah build -f app.containerfile -t metranpage-back --layers=true
+
+run-docker:
+	podman run metranpage-back:latest
+
