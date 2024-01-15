@@ -8,6 +8,10 @@ export type Template = {
   arg2: string;
 };
 
+export type TemplateResponse = {
+  templates: Template[];
+};
+
 export type ProjectResponse = {
   projects: Project[];
 };

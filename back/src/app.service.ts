@@ -12,15 +12,13 @@ type WorkerResponse = {
 
 @Injectable()
 export class AppService {
-  private readonly workerUrl: string;
+  private readonly workerUrl: string = process.env.WORKER_URL;
 
   constructor(
     private readonly projectsRepository: ProjectsRepository,
     private readonly templatesRepository: TemplatesRepository,
     private readonly httpService: HttpService,
-  ) {
-    this.workerUrl = process.env.WORKER_URL;
-  }
+  ) {}
 
   getProjects() {
     return {
@@ -34,21 +32,31 @@ export class AppService {
     };
   }
 
-  async buildProject(id: number) {
+  async buildProject(id: number, templateId: number) {
     // TODO actually, there should be queue scheduling, at actual project RabbitMQ is used
-    const response = await this.makeRequest(`${this.workerUrl}/build`, { id });
+    const template = this.templatesRepository.findById(templateId);
+    if (!template) {
+      throw new Error(`template with id ${templateId} not exist`);
+    }
+    const response = await this.makeRequest(`${this.workerUrl}/build`, {
+      id,
+      template,
+    });
 
     if (response) {
       const processedData = response.buildedProject!;
       return {
         buildedProject: `Additionally proccessed data from worker: ${processedData}`,
-      }
+      };
     } else {
       throw new Error("Something went wrong");
     }
   }
 
-  async makeRequest(url: string, body?: object): Promise<WorkerResponse | false> {
+  async makeRequest(
+    url: string,
+    body?: object,
+  ): Promise<WorkerResponse | false> {
     if (!url) {
       throw new Error("No url");
     }

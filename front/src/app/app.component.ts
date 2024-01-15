@@ -1,52 +1,39 @@
-import { Component } from "@angular/core";
-import { Subscription, map } from "rxjs";
-import { AppService } from "./app.service";
-import { Project } from "./models";
-
-export type ProjectState = {
-  project: Project;
-  buildedProject: string;
-  error: string;
-};
+import {ChangeDetectionStrategy, Component, inject} from "@angular/core";
+import {firstValueFrom, Observable} from "rxjs";
+import {Project, Template} from "./models";
+import {ProjectStateService} from "./state/project-state.service";
+import {TemplateStateService} from "./state/template-state.service";
 
 @Component({
   selector: "app-root",
   templateUrl: "./app.component.html",
   styleUrls: ["./app.component.scss"],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [ProjectStateService, TemplateStateService]
 })
 export class AppComponent {
-  private sub = new Subscription();
-  protected projects: ProjectState[] = [];
 
-  constructor(private readonly appService: AppService) {}
+  private templateSelectState: Map<number, number> = new Map()
 
-  ngOnInit() {
-    this.sub.add(
-      this.appService
-        .getProjects()
-        .pipe(map((projectData) => projectData.projects.map((project) => ({ project, buildedProject: "", error: "" }))))
-        .subscribe((projectData) => {
-          this.projects = projectData;
-        }),
-    );
-  }
-  ngOnDestroy(): void {
-    this.sub.unsubscribe();
+  private readonly projectState = inject(ProjectStateService)
+  private readonly templateState = inject(TemplateStateService)
+
+  protected readonly projects$: Observable<Project[]> = this.projectState.projects$
+  protected readonly templates$: Observable<Template[]> = this.templateState.templates$
+
+  selectTemplate(project: Project, event: any) {
+    this.templateSelectState.set(project.id, +event.target.value)
   }
 
-  async buildProject(id: number) {
-    const project = this.projects.find((p) => p.project.id === id);
-    if (!project) {
-      return;
-    }
+  async buildProject(project: Project) {
+    const templateId = await this.getTemplateId(project)
+    await this.projectState.buildProject(project, templateId)
+  }
 
-    try {
-      const result = await this.appService.buildProject(id);
-
-      project.buildedProject = result.buildedProject;
-    } catch (e) {
-      console.error(e);
-      project.error = "Something went wrong";
-    }
+  private async getTemplateId(project: Project): Promise<number> {
+    const id = this.templateSelectState.get(project.id)
+    if (id) return id
+    const templates = await firstValueFrom(this.templates$)
+    return templates[0].id
   }
 }

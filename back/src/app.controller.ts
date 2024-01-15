@@ -1,10 +1,10 @@
-import { Body, Controller, Get, Param, Post } from "@nestjs/common";
+import { Body, Controller, Get, Post } from "@nestjs/common";
 import { AppService } from "./app.service";
 
 type BuildRequest = {
   id: number;
-  // TODO templateId
-}
+  templateId: number;
+};
 
 @Controller()
 export class AppController {
@@ -22,6 +22,6 @@ export class AppController {
 
   @Post("build")
   buildProject(@Body() request: BuildRequest) {
-    return this.appService.buildProject(request.id);
+    return this.appService.buildProject(request.id, request.templateId);
   }
 }

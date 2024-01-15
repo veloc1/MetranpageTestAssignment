@@ -1,5 +1,5 @@
 import { HttpClient } from "@angular/common/http";
-import { BuildResponse, ProjectResponse } from "./models";
+import {BuildResponse, ProjectResponse, TemplateResponse} from "./models";
 import { Injectable } from "@angular/core";
 import { firstValueFrom } from "rxjs";
 
@@ -7,7 +7,7 @@ import { firstValueFrom } from "rxjs";
   providedIn: "root",
 })
 export class AppService {
-  private readonly backendUrl = "http://localhost:4443";
+  private readonly backendUrl = "http://localhost:3000";
 
   constructor(private readonly http: HttpClient) {}
 
@@ -15,11 +15,15 @@ export class AppService {
     return this.http.get<ProjectResponse>(`${this.backendUrl}/projects`);
   }
 
-  async buildProject(id: number) {
+  getTemplates() {
+    return this.http.get<TemplateResponse>(`${this.backendUrl}/templates`);
+  }
+
+  async buildProject(id: number, templateId: number) {
     return firstValueFrom(
       this.http.post<BuildResponse>(`${this.backendUrl}/build`, {
         id,
-        // TODO templateId
+        templateId
       }),
     );
   }

@@ -22,4 +22,8 @@ export class TemplatesRepository {
       },
     ];
   }
+
+  findById(id: number): Template | null {
+    return this.getList().find((template) => template.id === id) ?? null;
+  }
 }
